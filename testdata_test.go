@@ -271,7 +271,7 @@ type (
 				MaritalStatus             syntheaCode        `json:"maritalStatus"`
 				MedicationCodeableConcept syntheaCode        `json:"medicationCodeableConcept"`
 				MultipleBirthBoolean      bool               `json:"multipleBirthBoolean"`
-				Name                      json.RawMessage      `json:"name"`
+				Name                      json.RawMessage    `json:"name"`
 				NumberOfInstances         int64              `json:"numberOfInstances"`
 				NumberOfSeries            int64              `json:"numberOfSeries"`
 				OccurrenceDateTime        time.Time          `json:"occurrenceDateTime"`
@@ -328,8 +328,8 @@ type (
 				} `json:"supportingInfo"`
 				Telecom              []map[string]string `json:"telecom"`
 				Text                 map[string]string   `json:"text"`
-				Total                json.RawMessage       `json:"total"`
-				Type                 json.RawMessage       `json:"type"`
+				Total                json.RawMessage     `json:"total"`
+				Type                 json.RawMessage     `json:"type"`
 				Use                  string              `json:"use"`
 				VaccineCode          syntheaCode         `json:"vaccineCode"`
 				ValueCodeableConcept syntheaCode         `json:"valueCodeableConcept"`
@@ -508,5 +508,65 @@ type (
 		ExpandedURL string       `json:"expanded_url"`
 		DisplayURL  string       `json:"display_url"`
 		Indices     []int        `json:"indices"`
+	}
+)
+
+type (
+	licensesRoot []struct {
+		ID          string `json:"id"`
+		Identifiers []struct {
+			Identifier string `json:"identifier"`
+			Scheme     string `json:"scheme"`
+		} `json:"identifiers"`
+		Links []struct {
+			Note string `json:"note"`
+			URL  string `json:"url"`
+		} `json:"links"`
+		Name       string `json:"name"`
+		OtherNames []struct {
+			Name string `json:"name"`
+			Note string `json:"note"`
+		} `json:"other_names"`
+		SupersededBy any      `json:"superseded_by"`
+		Keywords     []string `json:"keywords"`
+		Text         []struct {
+			MediaType string `json:"media_type"`
+			Title     string `json:"title"`
+			URL       string `json:"url"`
+		} `json:"text"`
+	}
+)
+
+type (
+	githubRoot map[string]string
+)
+
+type (
+	nobelRoot struct {
+		Laureates []struct {
+			ID              string `json:"id"`
+			Firstname       string `json:"firstname,omitempty"`
+			Surname         string `json:"surname,omitempty"`
+			Born            string `json:"born,omitempty"`
+			Died            string `json:"died"`
+			BornCountry     string `json:"bornCountry,omitempty"`
+			BornCountryCode string `json:"bornCountryCode,omitempty"`
+			BornCity        string `json:"bornCity,omitempty"`
+			DiedCountry     string `json:"diedCountry,omitempty"`
+			DiedCountryCode string `json:"diedCountryCode,omitempty"`
+			DiedCity        string `json:"diedCity,omitempty"`
+			Gender          string `json:"gender"`
+			Prizes          []struct {
+				Year         string `json:"year"`
+				Category     string `json:"category"`
+				Share        string `json:"share"`
+				Motivation   string `json:"motivation"`
+				// Affiliations []struct {
+				// 	Name    string `json:"name"`
+				// 	City    string `json:"city"`
+				// 	Country string `json:"country"`
+				// } `json:"affiliations"`
+			} `json:"prizes"`
+		} `json:"laureates"`
 	}
 )

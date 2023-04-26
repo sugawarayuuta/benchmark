@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	decoder "github.com/bytedance/sonic/decoder"
+	"github.com/bytedance/sonic/decoder"
 	"github.com/bytedance/sonic/encoder"
 	exp "github.com/go-json-experiment/json"
 	goccy "github.com/goccy/go-json"
@@ -30,7 +30,6 @@ type (
 		unmarshal func([]byte, any) error
 		encode    func(io.Writer, any) error
 		marshal   func(any) ([]byte, error)
-		noStream  bool
 	}
 )
 
@@ -42,6 +41,9 @@ var (
 		{name: "twitter_status", new: func() any { return new(twitterRoot) }, data: gunzip("testdata/twitter_status.json.gz")},
 		{name: "golang_source", new: func() any { return new(golangRoot) }, data: gunzip("testdata/golang_source.json.gz")},
 		{name: "string_unicode", new: func() any { return new(stringRoot) }, data: gunzip("testdata/string_unicode.json.gz")},
+		{name: "licenses", new: func() any { return new(licensesRoot) }, data: gunzip("testdata/licenses.json.gz")},
+		{name: "github", new: func() any { return new(githubRoot) }, data: gunzip("testdata/github.json.gz")},
+		{name: "nobel", new: func() any { return new(nobelRoot) }, data: gunzip("testdata/nobel.json.gz")},
 	}
 	libraries = []library{
 		{
@@ -90,7 +92,6 @@ var (
 			name:      "go-json-experiment/json",
 			unmarshal: exp.Unmarshal,
 			marshal:   exp.Marshal,
-			noStream:  true,
 		},
 	}
 )
@@ -117,7 +118,7 @@ func gunzip(path string) []byte {
 	return buf.Bytes()
 }
 
-func Benchmark(bench *testing.B) {
+func BenchmarkMarshal(bench *testing.B) {
 	for _, tst := range testers {
 		for _, lib := range libraries {
 			val := tst.new()
@@ -126,7 +127,7 @@ func Benchmark(bench *testing.B) {
 				bench.Fatal(err)
 			}
 
-			bench.Run(tst.name+"/"+lib.name+"/marshal", func(bench *testing.B) {
+			bench.Run(tst.name+"/"+lib.name, func(bench *testing.B) {
 				bench.ReportAllocs()
 				for idx := 0; idx < bench.N; idx++ {
 					_, err := lib.marshal(val)
@@ -135,8 +136,14 @@ func Benchmark(bench *testing.B) {
 					}
 				}
 			})
+		}
+	}
+}
 
-			bench.Run(tst.name+"/"+lib.name+"/unmarshal", func(bench *testing.B) {
+func BenchmarkUnmarshal(bench *testing.B) {
+	for _, tst := range testers {
+		for _, lib := range libraries {
+			bench.Run(tst.name+"/"+lib.name, func(bench *testing.B) {
 				bench.ReportAllocs()
 				for idx := 0; idx < bench.N; idx++ {
 					err := lib.unmarshal(tst.data, tst.new())
@@ -145,12 +152,24 @@ func Benchmark(bench *testing.B) {
 					}
 				}
 			})
+		}
+	}
+}
 
-			if lib.noStream {
+func BenchmarkEncode(bench *testing.B) {
+	for _, tst := range testers {
+		for _, lib := range libraries {
+			if lib.encode == nil {
 				continue
 			}
 
-			bench.Run(tst.name+"/"+lib.name+"/encoder", func(bench *testing.B) {
+			val := tst.new()
+			err := lib.unmarshal(tst.data, val)
+			if err != nil {
+				bench.Fatal(err)
+			}
+
+			bench.Run(tst.name+"/"+lib.name, func(bench *testing.B) {
 				bench.ReportAllocs()
 				for idx := 0; idx < bench.N; idx++ {
 					err := lib.encode(io.Discard, val)
@@ -159,13 +178,23 @@ func Benchmark(bench *testing.B) {
 					}
 				}
 			})
+		}
+	}
+}
 
-			bench.Run(tst.name+"/"+lib.name+"/decoder", func(bench *testing.B) {
+func BenchmarkDecode(bench *testing.B) {
+	for _, tst := range testers {
+		for _, lib := range libraries {
+			if lib.decode == nil {
+				continue
+			}
+
+			bench.Run(tst.name+"/"+lib.name, func(bench *testing.B) {
 				bench.ReportAllocs()
 				var reader bytes.Reader
 				for idx := 0; idx < bench.N; idx++ {
 					reader.Reset(tst.data)
-					err := lib.decode(&reader, val)
+					err := lib.decode(&reader, tst.new())
 					if err != nil {
 						bench.Fatal(err)
 					}
