@@ -1,13 +1,13 @@
-// Copyright 2022 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-package jsonbench
+package test
 
 import (
+	"bytes"
+	"compress/gzip"
+	"io"
+	"os"
 	"time"
 
-	"github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 )
 
 type (
@@ -272,7 +272,7 @@ type (
 				MaritalStatus             syntheaCode        `json:"maritalStatus"`
 				MedicationCodeableConcept syntheaCode        `json:"medicationCodeableConcept"`
 				MultipleBirthBoolean      bool               `json:"multipleBirthBoolean"`
-				Name                      json.RawValue      `json:"name"`
+				Name                      jsontext.Value     `json:"name"`
 				NumberOfInstances         int64              `json:"numberOfInstances"`
 				NumberOfSeries            int64              `json:"numberOfSeries"`
 				OccurrenceDateTime        time.Time          `json:"occurrenceDateTime"`
@@ -329,8 +329,8 @@ type (
 				} `json:"supportingInfo"`
 				Telecom              []map[string]string `json:"telecom"`
 				Text                 map[string]string   `json:"text"`
-				Total                json.RawValue       `json:"total"`
-				Type                 json.RawValue       `json:"type"`
+				Total                jsontext.Value      `json:"total"`
+				Type                 jsontext.Value      `json:"type"`
 				Use                  string              `json:"use"`
 				VaccineCode          syntheaCode         `json:"vaccineCode"`
 				ValueCodeableConcept syntheaCode         `json:"valueCodeableConcept"`
@@ -511,3 +511,25 @@ type (
 		Indices     []int        `json:"indices"`
 	}
 )
+
+func gunzip(name string) []byte {
+	fl, err := os.Open(name)
+	if err != nil {
+		panic(err)
+	}
+	defer fl.Close()
+
+	gz, err := gzip.NewReader(fl)
+	if err != nil {
+		panic(err)
+	}
+	defer gz.Close()
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, gz)
+	if err != nil {
+		panic(err)
+	}
+
+	return buf.Bytes()
+}
